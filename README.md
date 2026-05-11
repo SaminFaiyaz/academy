@@ -1,1 +1,2 @@
 # academy
+print(1)
