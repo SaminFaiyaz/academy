@@ -1,0 +1,6 @@
+x = 0
+a =input("What do you want to write: ")
+y = int(input("Enter the time you want to type: "))
+while x < y :
+  print(a)
+  x = x + 1
