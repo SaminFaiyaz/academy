@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Offline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1c2541 0%, #0b132b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #edf2f4;
+        }
+
+        .container {
+            background: rgba(28, 37, 65, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 360px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            letter-spacing: 2px;
+            color: #48cae4;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .status {
+            font-size: 1.1rem;
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+            min-height: 1.5rem;
+            color: #edf2f4;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(11, 19, 43, 0.6);
+            padding: 0.75rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .score-val {
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .x-score { color: #48cae4; }
+        .o-score { color: #f72585; }
+        .draw-score { color: #ffb703; }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(11, 19, 43, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .cell:hover {
+            background: rgba(58, 80, 107, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .cell.x {
+            color: #48cae4;
+            text-shadow: 0 0 15px rgba(72, 202, 228, 0.6);
+        }
+
+        .cell.o {
+            color: #f72585;
+            text-shadow: 0 0 15px rgba(247, 37, 133, 0.6);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reset {
+            background: #48cae4;
+            color: #0b132b;
+        }
+
+        .btn-clear {
+            background: rgba(255, 255, 255, 0.1);
+            color: #edf2f4;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>TIC TAC TOE</h1>
+        <div class="status" id="status">Player X's Turn</div>
+
+        <div class="scoreboard">
+            <div>Player X <span id="scoreX" class="score-val x-score">0</span></div>
+            <div>Draws <span id="scoreDraws" class="score-val draw-score">0</span></div>
+            <div>Player O <span id="scoreO" class="score-val o-score">0</span></div>
+        </div>
+
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-reset" id="resetBtn">Next Round</button>
+            <button class="btn btn-clear" id="clearScoreBtn">Reset Scores</button>
+        </div>
+    </div>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const statusText = document.getElementById('status');
+        const resetBtn = document.getElementById('resetBtn');
+        const clearScoreBtn = document.getElementById('clearScoreBtn');
+        const scoreXText = document.getElementById('scoreX');
+        const scoreOText = document.getElementById('scoreO');
+        const scoreDrawsText = document.getElementById('scoreDraws');
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let gameActive = true;
+        let scores = { X: 0, O: 0, Draws: 0 };
+
+        cells.forEach(cell => cell.addEventListener('click', cellClicked));
+        resetBtn.addEventListener('click', resetBoard);
+        clearScoreBtn.addEventListener('click', resetScores);
+
+        function cellClicked() {
+            const index = this.getAttribute('data-index');
+
+            if (board[index] !== "" || !gameActive) return;
+
+            board[index] = currentPlayer;
+            this.textContent = currentPlayer;
+            this.classList.add(currentPlayer.toLowerCase());
+
+            checkResult();
+        }
+
+        function checkResult() {
+            let won = false;
+
+            for (let condition of winConditions) {
+                const [a, b, c] = condition;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    won = true;
+                    break;
+                }
+            }
+
+            if (won) {
+                statusText.textContent = `Player ${currentPlayer} Wins! 🎉`;
+                statusText.style.color = currentPlayer === "X" ? "#48cae4" : "#f72585";
+                scores[currentPlayer]++;
+                updateScoreboard();
+                gameActive = false;
+            } else if (!board.includes("")) {
+                statusText.textContent = "Match Draw! 🤝";
+                statusText.style.color = "#ffb703";
+                scores.Draws++;
+                updateScoreboard();
+                gameActive = false;
+            } else {
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                statusText.textContent = `Player ${currentPlayer}'s Turn`;
+                statusText.style.color = "#edf2f4";
+            }
+        }
+
+        function updateScoreboard() {
+            scoreXText.textContent = scores.X;
+            scoreOText.textContent = scores.O;
+            scoreDrawsText.textContent = scores.Draws;
+        }
+
+        function resetBoard() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            gameActive = true;
+            statusText.textContent = "Player X's Turn";
+            statusText.style.color = "#edf2f4";
+            cells.forEach(cell => {
+                cell.textContent = "";
+                cell.classList.remove('x', 'o');
+            });
+        }
+
+        function resetScores() {
+            scores = { X: 0, O: 0, Draws: 0 };
+            updateScoreboard();
+            resetBoard();
+        }
+    </script>
+</body>
+</html>
